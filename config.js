@@ -36,7 +36,7 @@ window.SITE_CONFIG = {
   // === Trust badge на hero ===
   trust: {
     rating: "4,9",
-    review_count: "59",
+    review_count: "331",                     // 59 в 2ГИС + 272 на Яндекс.Картах
     review_label: "оценок",
     award: "",                               // ⚠️ если есть награды — добавить
   },

@@ -152,6 +152,19 @@
     if (navMasters) navMasters.style.display = "none";
   }
 
+  // === 11b) Авто-перенумерация «01 / …» по видимым секциям ===
+  // Если какая-то секция скрыта (например, «Мастера» без фото),
+  // номера у оставшихся идут подряд, без пропусков.
+  const visibleEyebrows = Array.from(document.querySelectorAll(".section .eyebrow"))
+    .filter((el) => {
+      const sec = el.closest(".section");
+      return sec && getComputedStyle(sec).display !== "none";
+    });
+  visibleEyebrows.forEach((el, i) => {
+    const num = String(i + 1).padStart(2, "0");
+    el.textContent = el.textContent.replace(/^\s*\d+\s*\/\s*/, `${num} / `);
+  });
+
   // === 12) Часы работы ===
   const hoursEl = document.getElementById("hours-list");
   if (hoursEl && Array.isArray(cfg.hours)) {
