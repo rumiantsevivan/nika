@@ -22,6 +22,6 @@ html = html.replace(
     f"<script>\n{script}\n</script>",
 )
 
-out = base / "lucky-fox.html"
+out = base / "nika.html"
 out.write_text(html, encoding="utf-8")
 print(f"OK: {out}  ({out.stat().st_size // 1024} KB)")
