@@ -80,22 +80,84 @@
   }
 
   // === 8) Список услуг ===
+  // Поддерживаются 2 формата:
+  //   массив                                → плоский список (как в Lucky fox)
+  //   { tabs: [{ name, groups: [...] }] }   → табы по уровню мастера, внутри группы
   const servicesEl = document.getElementById("services-list");
-  if (servicesEl && Array.isArray(cfg.services)) {
-    servicesEl.innerHTML = cfg.services
-      .map(
-        (s, i) => `
-        <li class="services__item">
-          <span class="services__num">№ ${String(i + 1).padStart(2, "0")}</span>
-          <div>
-            <div class="services__title">${escapeHtml(s.title || "")}</div>
-            ${s.note ? `<div class="services__note">${escapeHtml(s.note)}</div>` : ""}
-          </div>
-          <span class="services__note services__note--desktop">${s.note ? "" : ""}</span>
-          <span class="services__price">${escapeHtml(s.price || "")}</span>
-        </li>`
-      )
-      .join("");
+  if (servicesEl) {
+    if (Array.isArray(cfg.services)) {
+      servicesEl.classList.add("services-root--flat");
+      servicesEl.innerHTML = `<ol class="services">${cfg.services
+        .map(
+          (s, i) => `
+          <li class="services__item">
+            <span class="services__num">№ ${String(i + 1).padStart(2, "0")}</span>
+            <div>
+              <div class="services__title">${escapeHtml(s.title || "")}</div>
+              ${s.note ? `<div class="services__note">${escapeHtml(s.note)}</div>` : ""}
+            </div>
+            <span class="services__price">${escapeHtml(s.price || "")}</span>
+          </li>`
+        )
+        .join("")}</ol>`;
+    } else if (cfg.services && Array.isArray(cfg.services.tabs)) {
+      const tabs = cfg.services.tabs;
+      servicesEl.classList.add("services-root--tabs");
+      const navHTML = tabs
+        .map(
+          (t, i) => `
+          <button type="button" class="srv-tab ${i === 0 ? "is-active" : ""}" data-tab="${i}">
+            <span class="srv-tab__name">${escapeHtml(t.name || "")}</span>
+            ${t.subtitle ? `<span class="srv-tab__sub">${escapeHtml(t.subtitle)}</span>` : ""}
+          </button>`
+        )
+        .join("");
+      const panelsHTML = tabs
+        .map(
+          (t, i) => `
+          <div class="srv-panel ${i === 0 ? "is-active" : ""}" data-panel="${i}">
+            <div class="srv-groups">
+              ${(t.groups || [])
+                .map(
+                  (g) => `
+                  <section class="srv-group">
+                    <h3 class="srv-group__title">${escapeHtml(g.title || "")}</h3>
+                    <ul class="srv-list">
+                      ${(g.items || [])
+                        .map(
+                          (it) => `
+                          <li class="srv-row">
+                            <span class="srv-row__title">
+                              ${escapeHtml(it.title || "")}
+                              ${it.note ? `<span class="srv-row__note">${escapeHtml(it.note)}</span>` : ""}
+                            </span>
+                            <span class="srv-row__dots" aria-hidden="true"></span>
+                            <span class="srv-row__price">${escapeHtml(it.price || "")}</span>
+                          </li>`
+                        )
+                        .join("")}
+                    </ul>
+                  </section>`
+                )
+                .join("")}
+            </div>
+          </div>`
+        )
+        .join("");
+      servicesEl.innerHTML = `
+        <div class="srv-nav" role="tablist">${navHTML}</div>
+        <div class="srv-panels">${panelsHTML}</div>`;
+      // Переключение табов
+      const tabBtns = servicesEl.querySelectorAll(".srv-tab");
+      const panels = servicesEl.querySelectorAll(".srv-panel");
+      tabBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const idx = btn.dataset.tab;
+          tabBtns.forEach((b) => b.classList.toggle("is-active", b === btn));
+          panels.forEach((p) => p.classList.toggle("is-active", p.dataset.panel === idx));
+        });
+      });
+    }
   }
 
   // === 9) Галерея ===
@@ -243,11 +305,25 @@
 
     // 1) Заполняем dropdown'ы из конфига
     const serviceSelect = form.querySelector("#b-service");
-    if (serviceSelect && Array.isArray(cfg.services)) {
-      cfg.services.forEach((s) => {
+    if (serviceSelect) {
+      // Сплющиваем услуги в плоский список (поддержка и массива, и табов)
+      const flat = [];
+      if (Array.isArray(cfg.services)) {
+        cfg.services.forEach((s) => flat.push(s));
+      } else if (cfg.services && Array.isArray(cfg.services.tabs)) {
+        cfg.services.tabs.forEach((tab) => {
+          (tab.groups || []).forEach((g) => {
+            (g.items || []).forEach((it) =>
+              flat.push({ ...it, tab: tab.name })
+            );
+          });
+        });
+      }
+      flat.forEach((s) => {
         const opt = document.createElement("option");
-        opt.value = s.title;
-        opt.textContent = `${s.title} — ${s.price}`;
+        const label = s.tab ? `${s.title} (${s.tab})` : s.title;
+        opt.value = label;
+        opt.textContent = `${label} — ${s.price}`;
         serviceSelect.appendChild(opt);
       });
     }
