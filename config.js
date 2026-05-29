@@ -244,7 +244,7 @@ window.SITE_CONFIG = {
     {
       name: "Марина",
       role: "Мастер шугаринга",
-      photo: "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=600&q=85",
+      photo: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=600&q=85",
     },
   ],
 
